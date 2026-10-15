@@ -1,21 +1,20 @@
-```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Smart Environment Dashboard</title>
+<title>ESP8266 Smart Environment</title>
 
 <style>
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  padding: 25px 15px;
+  padding: 24px 15px;
+  min-height: 100vh;
   font-family: Arial, Tahoma, sans-serif;
   color: #f1f5f9;
   background: linear-gradient(135deg, #081426, #142b4b);
-  min-height: 100vh;
 }
 
 .container {
@@ -28,17 +27,20 @@ header {
   padding: 25px 10px;
 }
 
-h1 { font-size: 27px; }
+h1 { font-size: 26px; }
 
-.subtitle { color: #a8bdd8; }
+.subtitle {
+  color: #a8bdd8;
+  font-size: 14px;
+}
 
 .status {
   display: inline-block;
-  margin-top: 12px;
   padding: 8px 14px;
+  margin-top: 15px;
   border-radius: 30px;
-  background: #123b38;
-  color: #6ee7b7;
+  background: #26364b;
+  color: #cbd5e1;
   font-size: 13px;
 }
 
@@ -49,11 +51,12 @@ h1 { font-size: 27px; }
 }
 
 .card {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 22px;
   padding: 25px 12px;
   text-align: center;
+  border: 1px solid #30445d;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.07);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
 }
 
 .card h2 {
@@ -72,16 +75,16 @@ h1 { font-size: 27px; }
 .humidity { color: #67d8ff; }
 
 footer {
+  margin-top: 28px;
   text-align: center;
   color: #a8bdd8;
   font-size: 13px;
-  line-height: 1.8;
-  margin-top: 28px;
+  line-height: 1.9;
 }
 
 @media (max-width: 400px) {
   .cards { gap: 10px; }
-  .card { padding: 20px 8px; }
+  .card { padding: 20px 7px; }
 }
 </style>
 </head>
@@ -93,9 +96,11 @@ footer {
   <div style="font-size:42px">🌐</div>
   <h1>SMART ENVIRONMENT</h1>
   <div class="subtitle">
-    ระบบตรวจวัดอุณหภูมิและความชื้น
+    ESP8266 + DHT11 Temperature & Humidity
   </div>
-  <div class="status">● DASHBOARD ONLINE</div>
+  <div class="status" id="connection">
+    กำลังเชื่อมต่อข้อมูล...
+  </div>
 </header>
 
 <div class="cards">
@@ -103,7 +108,7 @@ footer {
     <div style="font-size:36px">🌡️</div>
     <h2>อุณหภูมิ</h2>
     <div class="value temp">
-      <span id="temp">28.5</span> °C
+      <span id="temp">--.-</span> °C
     </div>
     <div class="subtitle">Temperature</div>
   </section>
@@ -112,31 +117,88 @@ footer {
     <div style="font-size:36px">💧</div>
     <h2>ความชื้นสัมพัทธ์</h2>
     <div class="value humidity">
-      <span id="hum">65</span> %
+      <span id="hum">--</span> %
     </div>
     <div class="subtitle">Humidity</div>
   </section>
 </div>
 
 <footer>
-  <div id="status">กำลังแสดงข้อมูลตัวอย่าง</div>
-  <div>ESP8266 + DHT11</div>
-  <div>GitHub Pages Dashboard</div>
+  <div id="updated">รอข้อมูลจากเซนเซอร์</div>
+  <div>Data source: ThingSpeak Cloud</div>
+  <div>ESP8266 IoT Dashboard</div>
 </footer>
 
 </div>
 
 <script>
-// ข้อมูลตัวอย่างสำหรับทดสอบหน้าเว็บ
-// ยังไม่ได้อ่านค่าจริงจาก DHT11
+// แก้เป็น Channel ID ของคุณ
+const CHANNEL_ID = "YOUR_CHANNEL_ID";
 
-document.getElementById('temp').textContent = '28.5';
-document.getElementById('hum').textContent = '65';
+// ดึงข้อมูลล่าสุดจาก Channel ที่ตั้งเป็น Public
+async function updateData() {
+  const status = document.getElementById("connection");
 
-document.getElementById('status').textContent =
-  'โหมดสาธิต — ยังไม่ได้เชื่อมต่อเซนเซอร์จริง';
+  try {
+    const url =
+      `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=1`;
+
+    const response = await fetch(url, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    const data = await response.json();
+    const feeds = data.feeds;
+
+    if (!feeds || feeds.length === 0) {
+      throw new Error("ยังไม่มีข้อมูล");
+    }
+
+    const latest = feeds[feeds.length - 1];
+    const temperature = Number(latest.field1);
+    const humidity = Number(latest.field2);
+
+    if (
+      latest.field1 === null || latest.field2 === null ||
+      !Number.isFinite(temperature) ||
+      !Number.isFinite(humidity)
+    ) {
+      throw new Error("ข้อมูลเซนเซอร์ไม่ครบ");
+    }
+
+    document.getElementById("temp").textContent =
+      temperature.toFixed(1);
+
+    document.getElementById("hum").textContent =
+      humidity.toFixed(0);
+
+    status.textContent = "● รับข้อมูลจาก Cloud สำเร็จ";
+    status.style.color = "#6ee7b7";
+
+    const time = new Date(latest.created_at);
+
+    document.getElementById("updated").textContent =
+      "เวลาข้อมูลล่าสุด: " +
+      time.toLocaleString("th-TH");
+
+  } catch (error) {
+    status.textContent = "ไม่สามารถดึงข้อมูลได้";
+    status.style.color = "#fca5a5";
+
+    document.getElementById("updated").textContent =
+      "ตรวจสอบ Channel ID, การเชื่อมต่อ และข้อมูลใน ThingSpeak";
+    console.error(error);
+  }
+}
+
+// อ่านครั้งแรกทันที
+updateData();
+
+// อัปเดตหน้าเว็บทุก 20 วินาที
+setInterval(updateData, 20000);
 </script>
 
 </body>
 </html>
-```
