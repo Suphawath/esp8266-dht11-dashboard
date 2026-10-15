@@ -1,0 +1,142 @@
+```html
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Environment Dashboard</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 25px 15px;
+  font-family: Arial, Tahoma, sans-serif;
+  color: #f1f5f9;
+  background: linear-gradient(135deg, #081426, #142b4b);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 760px;
+  margin: auto;
+}
+
+header {
+  text-align: center;
+  padding: 25px 10px;
+}
+
+h1 { font-size: 27px; }
+
+.subtitle { color: #a8bdd8; }
+
+.status {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 14px;
+  border-radius: 30px;
+  background: #123b38;
+  color: #6ee7b7;
+  font-size: 13px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+  padding: 25px 12px;
+  text-align: center;
+}
+
+.card h2 {
+  color: #b9cbe0;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.value {
+  font-size: clamp(30px, 7vw, 44px);
+  font-weight: bold;
+  margin: 18px 0;
+}
+
+.temp { color: #fbbf69; }
+.humidity { color: #67d8ff; }
+
+footer {
+  text-align: center;
+  color: #a8bdd8;
+  font-size: 13px;
+  line-height: 1.8;
+  margin-top: 28px;
+}
+
+@media (max-width: 400px) {
+  .cards { gap: 10px; }
+  .card { padding: 20px 8px; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <div style="font-size:42px">🌐</div>
+  <h1>SMART ENVIRONMENT</h1>
+  <div class="subtitle">
+    ระบบตรวจวัดอุณหภูมิและความชื้น
+  </div>
+  <div class="status">● DASHBOARD ONLINE</div>
+</header>
+
+<div class="cards">
+  <section class="card">
+    <div style="font-size:36px">🌡️</div>
+    <h2>อุณหภูมิ</h2>
+    <div class="value temp">
+      <span id="temp">28.5</span> °C
+    </div>
+    <div class="subtitle">Temperature</div>
+  </section>
+
+  <section class="card">
+    <div style="font-size:36px">💧</div>
+    <h2>ความชื้นสัมพัทธ์</h2>
+    <div class="value humidity">
+      <span id="hum">65</span> %
+    </div>
+    <div class="subtitle">Humidity</div>
+  </section>
+</div>
+
+<footer>
+  <div id="status">กำลังแสดงข้อมูลตัวอย่าง</div>
+  <div>ESP8266 + DHT11</div>
+  <div>GitHub Pages Dashboard</div>
+</footer>
+
+</div>
+
+<script>
+// ข้อมูลตัวอย่างสำหรับทดสอบหน้าเว็บ
+// ยังไม่ได้อ่านค่าจริงจาก DHT11
+
+document.getElementById('temp').textContent = '28.5';
+document.getElementById('hum').textContent = '65';
+
+document.getElementById('status').textContent =
+  'โหมดสาธิต — ยังไม่ได้เชื่อมต่อเซนเซอร์จริง';
+</script>
+
+</body>
+</html>
+```
